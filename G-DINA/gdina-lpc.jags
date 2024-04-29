@@ -1,0 +1,26 @@
+# G-DINA with LPC
+model{
+	for (i in 1:N){
+		alpha[i] ~ dcat(ppi[1:C])
+		for(j in 1:J) {
+			Y[i,j] ~ dbern(prob[j,alpha[i]])
+		}
+	}
+	ppi[1:C] ~ ddirch(rep(1,C))
+	for(j in 1:J){
+		for( c in 1:Cj[j]){
+			theta.raw[j,c] ~ dbeta(1,1)
+		}
+		for( c in (Cj[j]+1):C){
+			theta.raw[j,c] = 1
+		}
+		RankOfP[j,1:C] = rank(theta.raw[j,1:C])
+		theta[j,1] = min(theta.raw[j,1:Cj[j]])
+		for(c in 2:Cj[j]){
+			theta[j,c]  = ifelse(RankOfP[j,c]==1, theta.raw[j,1], theta.raw[j,c])
+		}
+		for(c in 1:C){
+			prob[j,c]= theta[j, Alpha.Equivalency[j,c]]
+		}
+	}
+}
