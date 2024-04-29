@@ -1,0 +1,41 @@
+# GPDM model with soft LHPC
+model{
+	# modeling the attribute vector and the responses
+	for (i in 1:N){
+		alpha[i] ~ dcat(ppi[1:C])
+		for(j in 1:J) {
+			Y[i,j] ~ dcat(prob[j,alpha[i],1:Hj[j]])
+		}
+	}
+	ppi[1:C] ~ ddirch(Lambda[1:C])
+	# modeling the item attributes
+	for(j in 1:J){
+		for( l in 1:Cj[j]){
+			theta.raw[j, l ,1:Hj[j]] ~ ddirch(rho[ j, l, 1:Hj[j]])
+			for(h in 1:Hj[j]){
+				theta[j, l , h] = ifelse(theta.raw[ j, l , h] < (1.0E-6, 1.0E-6,  theta.raw[j, l , h])
+			}
+		}
+	}
+	# completing the empty cels of theta with 0
+	for(j in 1:J){
+		for( l in 1:Cj[j]){
+			for(r in (Hj[j]+1):maxcat){
+				theta[j,l,r] =0
+			}
+		}
+		for( l in (Cj[j]+1):C){
+			for(r in 1:maxcat){
+				theta[j,l,r] =0
+			}
+		}
+	}
+	# transforming theta in prob
+	for(j in 1:J){
+		for(c in 1:C){
+			for(r in 1:maxcat){
+				prob[j,c,r]<-theta[ j, Alpha.Equivalency[j,c] , r]
+			}
+		}
+	}	
+}
